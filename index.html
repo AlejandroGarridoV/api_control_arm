@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Brazo Robot Soldador</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">🤖 Sistema IoT Soldadura</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Control</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="admin.html">Administración</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="monitoring.html">Monitoreo</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Control Brazo Robot Soldador</h1>
+            <div class="status" id="status">
+                <span>Estado del brazo: </span>
+                <span id="status-text">Cargando...</span>
+                <span>Estado del ventilador: </span>
+                <span id="status-text">Cargando...</span>
+                <span>Estado de la banda transportadora: </span>
+                <span id="status-text">Cargando...</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- Panel de Control Principal -->
+            <div class="control-panel">
+                <div class="power-section">
+                    <h2>Encendido/Apagado del brazo</h2>
+                    <button id="power-on" class="btn btn-success">⚡ Encender</button>
+                    <button id="power-off" class="btn btn-danger">🔌 Apagar</button>
+                </div>
+
+                <div class="power-section">
+                    <h2>Encendido/Apagado del ventilador</h2>
+                    <button id="power-on" class="btn btn-success">⚡ Encender</button>
+                    <button id="power-off" class="btn btn-danger">🔌 Apagar</button>
+                </div>
+
+                <div class="power-section">
+                    <h2>Control de la banda transportadora</h2>
+                    <button id="power-on" class="btn btn-success">⚡ Anterior</button>
+                    <button id="power-off" class="btn btn-danger">🔌 Siguiente</button>
+                </div>
+
+                <div class="emergency-section">
+                    <h2>Control de Emergencia</h2>
+                    <button id="emergency-stop" class="btn btn-emergency">🛑 Parada Emergencia</button>
+                </div>
+
+                <div class="movement-section">
+                    <h2>Control de Movimiento del brazo</h2>
+                    <div class="coordinates">
+                        <div class="coord-input">
+                            <label>X: </label>
+                            <input type="number" id="coord-x" value="0" min="0" max="200">
+                        </div>
+                        <div class="coord-input">
+                            <label>Y: </label>
+                            <input type="number" id="coord-y" value="0" min="0" max="200">
+                        </div>
+                        <div class="coord-input">
+                            <label>Z: </label>
+                            <input type="number" id="coord-z" value="0" min="0" max="100">
+                        </div>
+                    </div>
+                    <button id="move-to" class="btn btn-primary">🎯 Mover el brazo a la Posición</button>
+                    <button id="go-home" class="btn btn-info">🏠 Posición inicial</button>
+                </div>
+
+                <div class="welding-section">
+                    <h2>Control de Soldadura</h2>
+                    <div class="path-input">
+                        <label>Puntos de Trayectoria (JSON):</label>
+                        <textarea id="weld-points" placeholder='[[0,0,0], [0,0,0], [0,0,0]]'></textarea>
+                    </div>
+                    <button id="start-weld" class="btn btn-weld">🔥 Soldar Trayectoria</button>
+                    <button id="stop-weld" class="btn btn-danger">⏹️ Detener Soldadura</button>
+                </div>
+            </div>
+
+            <!-- Panel de Visualización -->
+            <div class="visualization-panel">
+                <h2>Posición Actual</h2>
+                <div class="position-display">
+                    <div>X: <span id="current-x">0</span></div>
+                    <div>Y: <span id="current-y">0</span></div>
+                    <div>Z: <span id="current-z">0</span></div>
+                </div>
+
+                <div class="state-display">
+                    <h2>Estado de los dispositivos</h2>
+                    <div id="arm-state">Brazo: Apagado</div>
+                    <div id="fan-state">Ventilador: Apagado</div>
+                    <div id="conveyor-state">Banda Transportadora: Detenida</div>
+                    <div id="welding-state">Soldadura: Inactiva</div>
+                    <div id="emergency-state">Emergencia: No activa</div>
+                    <div id="last-update">Última actualización: -</div>
+                </div>
+
+                <div class="log-section">
+                    <h2>Log de Eventos</h2>
+                    <div id="event-log" class="event-log"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/ui.js"></script>
+</body>
+</html>
