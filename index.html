@@ -93,6 +93,7 @@
         .navbar {
             background: #2c3e50 !important;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
 
         .navbar-brand, .nav-link {
@@ -103,7 +104,6 @@
             color: #3498db !important;
             font-weight: bold;
         }
-
 
         main {
             display: grid;
@@ -279,18 +279,106 @@
         .event-log .log-error { color: #e74c3c; }
         .event-log .log-weld { color: #e67e22; }
 
-        .navbar {
-            background: #2c3e50 !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        /* Nuevos estilos para indicadores visuales */
+        .device-status-card {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            background: #2c3e50;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .device-status-card.on {
+            background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .device-status-card.off {
+            background: linear-gradient(135deg, #7f8c8d 0%, #6c7a7b 100%);
+        }
+
+        .device-status-card.moving, .device-status-card.welding {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.4);
+        }
+
+        .device-status-card.emergency {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
+            animation: blink 1s infinite;
+        }
+
+        .device-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            width: 40px;
+            text-align: center;
+        }
+
+        .device-info {
+            flex: 1;
+        }
+
+        .device-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .device-state {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .status-on { background: #2ecc71; box-shadow: 0 0 10px #2ecc71; }
+        .status-off { background: #e74c3c; }
+        .status-moving { background: #f39c12; box-shadow: 0 0 10px #f39c12; }
+        .status-welding { background: #e67e22; box-shadow: 0 0 10px #e67e22; }
+        .status-emergency { 
+            background: #ff6b6b; 
+            box-shadow: 0 0 10px #ff6b6b;
+            animation: blink 1s infinite;
+        }
+
+        .visual-indicators {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
             margin-bottom: 20px;
         }
 
-        .navbar-brand, .nav-link {
-            color: #ecf0f1 !important;
+        .visual-indicator {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            background: #2c3e50;
+            transition: all 0.3s ease;
         }
 
-        .nav-link.active {
-            color: #3498db !important;
+        .visual-indicator.active {
+            background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .visual-indicator.inactive {
+            background: linear-gradient(135deg, #7f8c8d 0%, #6c7a7b 100%);
+        }
+
+        .indicator-icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .indicator-value {
+            font-size: 1.2em;
             font-weight: bold;
         }
 
@@ -301,6 +389,10 @@
             }
             
             .coordinates {
+                grid-template-columns: 1fr;
+            }
+
+            .visual-indicators {
                 grid-template-columns: 1fr;
             }
         }
@@ -449,6 +541,27 @@
 
             <!-- Panel de Visualización -->
             <div class="visualization-panel">
+                <!-- Indicadores visuales -->
+                <h2><i class="bi bi-lightning-charge"></i> Estado del Sistema</h2>
+                <div class="visual-indicators">
+                    <div class="visual-indicator" id="arm-visual">
+                        <div class="indicator-icon"><i class="bi bi-robot"></i></div>
+                        <div class="indicator-value">Brazo: Apagado</div>
+                    </div>
+                    <div class="visual-indicator" id="fan-visual">
+                        <div class="indicator-icon"><i class="bi bi-fan"></i></div>
+                        <div class="indicator-value">Ventilador: Apagado</div>
+                    </div>
+                    <div class="visual-indicator" id="conveyor-visual">
+                        <div class="indicator-icon"><i class="bi bi-cone-striped"></i></div>
+                        <div class="indicator-value">Banda: Apagada</div>
+                    </div>
+                    <div class="visual-indicator" id="welding-visual">
+                        <div class="indicator-icon"><i class="bi bi-fire"></i></div>
+                        <div class="indicator-value">Soldadura: Inactiva</div>
+                    </div>
+                </div>
+
                 <h2><i class="bi bi-geo-alt"></i> Posición Actual Brazo</h2>
                 <div class="position-display">
                     <div>X: <span id="current-x">0</span></div>
@@ -457,11 +570,34 @@
                 </div>
 
                 <div class="state-display">
-                    <h2><i class="bi bi-info-circle"></i> Estado del Sistema</h2>
-                    <div id="arm-state">Brazo Robot: Apagado</div>
-                    <div id="fan-state">Ventilador: Apagado</div>
-                    <div id="conveyor-state">Banda Transportadora: Apagada</div>
-                    <div id="welding-state">Soldadura: Inactiva</div>
+                    <h2><i class="bi bi-info-circle"></i> Estado Detallado</h2>
+                    <div class="device-status-card" id="arm-status-card">
+                        <div class="device-icon"><i class="bi bi-robot"></i></div>
+                        <div class="device-info">
+                            <div class="device-name">Brazo Robot</div>
+                            <div class="device-state" id="arm-state">Apagado</div>
+                        </div>
+                        <span class="status-indicator status-off"></span>
+                    </div>
+                    
+                    <div class="device-status-card" id="fan-status-card">
+                        <div class="device-icon"><i class="bi bi-fan"></i></div>
+                        <div class="device-info">
+                            <div class="device-name">Ventilador</div>
+                            <div class="device-state" id="fan-state">Apagado</div>
+                        </div>
+                        <span class="status-indicator status-off"></span>
+                    </div>
+                    
+                    <div class="device-status-card" id="conveyor-status-card">
+                        <div class="device-icon"><i class="bi bi-cone-striped"></i></div>
+                        <div class="device-info">
+                            <div class="device-name">Banda Transportadora</div>
+                            <div class="device-state" id="conveyor-state">Apagada</div>
+                        </div>
+                        <span class="status-indicator status-off"></span>
+                    </div>
+                    
                     <div id="emergency-state">Emergencia: No activa</div>
                     <div id="last-update">Última actualización: -</div>
                 </div>

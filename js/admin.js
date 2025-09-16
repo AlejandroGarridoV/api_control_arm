@@ -11,17 +11,42 @@ class AdminManager {
         document.getElementById('deviceModal').addEventListener('hidden.bs.modal', () => {
             this.resetForm();
         });
-        document.getElementById('refresh-btn').addEventListener('click', () => this.loadDevices());
+        
+        // Agregar evento al botón de actualizar si existe
+        const refreshBtn = document.getElementById('refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.loadDevices());
+        }
     }
 
     async loadDevices() {
         try {
-            // Cambiar de iotAPI a deviceAPI
-            const devices = await deviceAPI.getDevices();
+            // Mostrar mensaje de carga
+            this.showLoading(true);
+            
+            // Usar la API disponible (deviceAPI o robotAPI)
+            const api = window.deviceAPI || window.robotAPI;
+            if (!api) {
+                throw new Error('No se encontró la API');
+            }
+            
+            const devices = await api.getDevices();
             this.renderDevicesTable(devices);
+            
+            // Ocultar mensaje de carga
+            this.showLoading(false);
         } catch (error) {
             console.error('Error cargando dispositivos:', error);
-            alert('Error al cargar los dispositivos. Verifica la conexión.');
+            this.showLoading(false);
+            this.showError('Error al cargar los dispositivos. Verifica la conexión.');
+            
+            // Mostrar datos de ejemplo en caso de error
+            const exampleData = [
+                {id: "1", name: "Brazo Soldador Principal", type: "robot_arm", status: "off", last_update: new Date().toISOString()},
+                {id: "2", name: "Ventilador de Extracción", type: "fan", status: "idle", last_update: new Date().toISOString()},
+                {id: "3", name: "Banda Transportadora", type: "conveyor", status: "off", last_update: new Date().toISOString()}
+            ];
+            this.renderDevicesTable(exampleData);
         }
     }
 
@@ -67,7 +92,7 @@ class AdminManager {
             tableBody.appendChild(row);
         });
         
-        // Agregar eventos a los botones
+        // Agregar eventos a los botones de editar y eliminar
         document.querySelectorAll('.edit-device').forEach(button => {
             button.addEventListener('click', (e) => {
                 const deviceId = e.target.getAttribute('data-id');
@@ -85,8 +110,13 @@ class AdminManager {
 
     async editDevice(id) {
         try {
-            // Cambiar de iotAPI a deviceAPI
-            const device = await deviceAPI.getDevice(id);
+            // Usar la API disponible (deviceAPI o robotAPI)
+            const api = window.deviceAPI || window.robotAPI;
+            if (!api) {
+                throw new Error('No se encontró la API');
+            }
+            
+            const device = await api.getDevice(id);
             this.currentEditingId = id;
             
             document.getElementById('device-id').value = device.id;
@@ -100,7 +130,7 @@ class AdminManager {
             modal.show();
         } catch (error) {
             console.error('Error editando dispositivo:', error);
-            alert('Error al cargar el dispositivo para editar.');
+            this.showError('Error al cargar el dispositivo para editar.');
         }
     }
 
@@ -110,13 +140,18 @@ class AdminManager {
         }
         
         try {
-            // Cambiar de iotAPI a deviceAPI
-            await deviceAPI.deleteDevice(id);
-            alert('Dispositivo eliminado correctamente.');
+            // Usar la API disponible (deviceAPI o robotAPI)
+            const api = window.deviceAPI || window.robotAPI;
+            if (!api) {
+                throw new Error('No se encontró la API');
+            }
+            
+            await api.deleteDevice(id);
+            this.showSuccess('Dispositivo eliminado correctamente.');
             this.loadDevices();
         } catch (error) {
             console.error('Error eliminando dispositivo:', error);
-            alert('Error al eliminar el dispositivo.');
+            this.showError('Error al eliminar el dispositivo.');
         }
     }
 
@@ -135,14 +170,18 @@ class AdminManager {
         };
         
         try {
+            // Usar la API disponible (deviceAPI o robotAPI)
+            const api = window.deviceAPI || window.robotAPI;
+            if (!api) {
+                throw new Error('No se encontró la API');
+            }
+            
             if (this.currentEditingId) {
-                // Cambiar de iotAPI a deviceAPI
-                await deviceAPI.updateDevice(this.currentEditingId, deviceData);
-                alert('Dispositivo actualizado correctamente.');
+                await api.updateDevice(this.currentEditingId, deviceData);
+                this.showSuccess('Dispositivo actualizado correctamente.');
             } else {
-                // Cambiar de iotAPI a deviceAPI
-                await deviceAPI.createDevice(deviceData);
-                alert('Dispositivo creado correctamente.');
+                await api.createDevice(deviceData);
+                this.showSuccess('Dispositivo creado correctamente.');
             }
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('deviceModal'));
@@ -151,7 +190,7 @@ class AdminManager {
             this.loadDevices();
         } catch (error) {
             console.error('Error guardando dispositivo:', error);
-            alert('Error al guardar el dispositivo.');
+            this.showError('Error al guardar el dispositivo.');
         }
     }
 
@@ -161,10 +200,81 @@ class AdminManager {
         this.currentEditingId = null;
         document.getElementById('modalTitle').textContent = 'Agregar Dispositivo';
     }
+
+    showLoading(show) {
+        const loadingElement = document.getElementById('loading-message');
+        if (loadingElement) {
+            if (show) {
+                loadingElement.classList.remove('d-none');
+            } else {
+                loadingElement.classList.add('d-none');
+            }
+        }
+    }
+
+    showError(message) {
+        // Crear y mostrar un mensaje de error
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.container');
+        if (container) {
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // Auto-eliminar después de 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+    }
+
+    showSuccess(message) {
+        // Crear y mostrar un mensaje de éxito
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.container');
+        if (container) {
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // Auto-eliminar después de 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+    }
 }
 
 // Inicialización cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    const adminManager = new AdminManager(deviceAPI);
-    window.adminManager = adminManager;
+    // Verificar si alguna API está disponible
+    const api = window.deviceAPI || window.robotAPI;
+    
+    if (api) {
+        const adminManager = new AdminManager(api);
+        window.adminManager = adminManager;
+    } else {
+        console.error('No se encontró ninguna API disponible');
+        // Mostrar mensaje de error
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger';
+        errorDiv.textContent = 'Error: No se pudo conectar con el sistema. Por favor, recarga la página.';
+        
+        const container = document.querySelector('.container');
+        if (container) {
+            container.insertBefore(errorDiv, container.firstChild);
+        }
+    }
 });
