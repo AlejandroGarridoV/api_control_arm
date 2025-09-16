@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoreo - Sistema IoT Soldadura</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-       * {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -30,36 +30,10 @@
             overflow: hidden;
         }
 
-        header {
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        header::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><circle cx="50" cy="50" r="40" fill="none" stroke="%233498db" stroke-width="2" stroke-dasharray="5,5" /></svg>');
-            opacity: 0.1;
-        }
-
-        header h1 {
-            margin-bottom: 10px;
-            font-size: 2.2em;
-            position: relative;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
         .navbar {
             background: #2c3e50 !important;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
 
         .navbar-brand, .nav-link {
@@ -118,18 +92,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
-        .btn-success { background: #27ae60; color: white; }
-        .btn-danger { background: #e74c3c; color: white; }
-        .btn-primary { background: #3498db; color: white; }
-        .btn-info { background: #17a2b8; color: white; }
-        .btn-warning { background: #f39c12; color: white; }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
         .badge {
             font-size: 0.85em;
             padding: 6px 10px;
@@ -146,41 +108,6 @@
         }
         .bg-danger { background: #e74c3c !important; }
 
-        .modal-content {
-            background: #2c3e50;
-            color: #ecf0f1;
-            border: 1px solid #3a506b;
-            border-radius: 10px;
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #3a506b;
-            background: #1a2530;
-        }
-
-        .modal-footer {
-            border-top: 1px solid #3a506b;
-        }
-
-        .form-control, .form-select {
-            background: #1a2530;
-            border: 2px solid #4a6580;
-            color: #ecf0f1;
-            padding: 10px;
-        }
-
-        .form-control:focus, .form-select:focus {
-            background: #1a2530;
-            border-color: #3498db;
-            color: #ecf0f1;
-            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
-        }
-
-        .form-label {
-            font-weight: bold;
-            color: #ecf0f1;
-        }
-
         .alert {
             border: none;
             border-radius: 8px;
@@ -193,26 +120,43 @@
             color: white;
         }
 
-        .alert-success {
-            background: #27ae60;
-            color: white;
-        }
-
         .alert-danger {
             background: #e74c3c;
             color: white;
         }
 
-        /* Animaciones */
-        @keyframes pulse {
-            0% { opacity: 0.4; }
-            50% { opacity: 1; }
-            100% { opacity: 0.4; }
+        /* Estilos para tarjetas de estado */
+        .status-card {
+            transition: all 0.3s ease;
         }
-
-        .status-loading { 
-            background: #f39c12; 
-            animation: pulse 1.5s infinite; 
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-on {
+            background: linear-gradient(135deg, #27ae60 0%, #219653 100%) !important;
+        }
+        
+        .status-off {
+            background: linear-gradient(135deg, #7f8c8d 0%, #6c7a7b 100%) !important;
+        }
+        
+        .status-idle {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+        }
+        
+        .status-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%) !important;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: bold;
         }
 
         /* Responsive */
@@ -226,27 +170,38 @@
                 justify-content: center;
                 margin-bottom: 10px;
             }
+            
+            .table-responsive {
+                overflow-x: auto;
+            }
         }
-    
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">🤖 Sistema IoT Soldadura</a>
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-cpu"></i> Sistema IoT Soldadura
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">Control</a>
+                        <a class="nav-link" href="index.html">
+                            <i class="bi bi-joystick"></i> Control
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="admin.html">Administración</a>
+                        <a class="nav-link" href="admin.html">
+                            <i class="bi bi-gear-fill"></i> Administración
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="monitoring.html">Monitoreo</a>
+                        <a class="nav-link active" href="monitoring.html">
+                            <i class="bi bi-graph-up"></i> Monitoreo
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -254,17 +209,54 @@
     </nav>
 
     <div class="container mt-4">
-        <h1 class="mb-4">Monitoreo de Dispositivos IoT</h1>
+        <h1 class="mb-4 text-center">
+            <i class="bi bi-graph-up"></i> Monitoreo de Dispositivos IoT
+        </h1>
+        
+        <div class="alert alert-info d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <div>
+                Los datos se actualizan automáticamente cada 2 segundos
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <i class="bi bi-list-check"></i> Estado Actual de Dispositivos
+                        </h2>
+                        <span id="last-update" class="badge bg-light text-dark">Actualizando...</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="devices-status-cards">
+                            <!-- Tarjetas de estado se cargarán aquí dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h2>Historial de Estados (Últimos 10 registros por dispositivo) Que se actualiza por si solo cada 2 segundos</h2>
+                        <h2 class="mb-0">
+                            <i class="bi bi-clock-history"></i> Historial de Estados (Últimos 10 registros)
+                        </h2>
                     </div>
                     <div class="card-body">
                         <div id="status-tables">
-                            <!-- Tablas de estado se cargarán aquí dinámicamente -->
+                            <!-- Tabla de historial se cargará aquí dinámicamente -->
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2">Cargando historial...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -273,7 +265,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/api.js"></script>
     <script src="js/monitoring.js"></script>
 </body>
 </html>
