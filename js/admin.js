@@ -16,18 +16,12 @@ class AdminManager {
 
     async loadDevices() {
         try {
-            const devices = await this.api.getDevices();
+            // Cambiar de iotAPI a deviceAPI
+            const devices = await deviceAPI.getDevices();
             this.renderDevicesTable(devices);
         } catch (error) {
             console.error('Error cargando dispositivos:', error);
-            this.showError('Error al cargar los dispositivos. Mostrando datos de ejemplo.');
-            // Mostrar datos de ejemplo en caso de error
-            const exampleData = [
-                {id: "1", name: "Brazo Soldador Principal", type: "robot_arm", status: "off", last_update: new Date().toISOString()},
-                {id: "2", name: "Ventilador de Extracción", type: "fan", status: "idle", last_update: new Date().toISOString()},
-                {id: "3", name: "Banda Transportadora", type: "conveyor", status: "off", last_update: new Date().toISOString()}
-            ];
-            this.renderDevicesTable(exampleData);
+            alert('Error al cargar los dispositivos. Verifica la conexión.');
         }
     }
 
@@ -65,8 +59,8 @@ class AdminManager {
                 <td><span class="${statusInfo.class}">${statusInfo.text}</span></td>
                 <td>${new Date(device.last_update).toLocaleString()}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary btn-action edit-device" data-id="${device.id}">Editar</button>
-                    <button class="btn btn-sm btn-danger btn-action delete-device" data-id="${device.id}">Eliminar</button>
+                    <button class="btn btn-sm btn-primary edit-device" data-id="${device.id}">Editar</button>
+                    <button class="btn btn-sm btn-danger delete-device" data-id="${device.id}">Eliminar</button>
                 </td>
             `;
             
@@ -91,7 +85,8 @@ class AdminManager {
 
     async editDevice(id) {
         try {
-            const device = await this.api.getDevice(id);
+            // Cambiar de iotAPI a deviceAPI
+            const device = await deviceAPI.getDevice(id);
             this.currentEditingId = id;
             
             document.getElementById('device-id').value = device.id;
@@ -105,7 +100,7 @@ class AdminManager {
             modal.show();
         } catch (error) {
             console.error('Error editando dispositivo:', error);
-            this.showError('Error al cargar el dispositivo para editar.');
+            alert('Error al cargar el dispositivo para editar.');
         }
     }
 
@@ -115,12 +110,13 @@ class AdminManager {
         }
         
         try {
-            await this.api.deleteDevice(id);
-            this.showSuccess('Dispositivo eliminado correctamente.');
+            // Cambiar de iotAPI a deviceAPI
+            await deviceAPI.deleteDevice(id);
+            alert('Dispositivo eliminado correctamente.');
             this.loadDevices();
         } catch (error) {
             console.error('Error eliminando dispositivo:', error);
-            this.showError('Error al eliminar el dispositivo.');
+            alert('Error al eliminar el dispositivo.');
         }
     }
 
@@ -140,11 +136,13 @@ class AdminManager {
         
         try {
             if (this.currentEditingId) {
-                await this.api.updateDevice(this.currentEditingId, deviceData);
-                this.showSuccess('Dispositivo actualizado correctamente.');
+                // Cambiar de iotAPI a deviceAPI
+                await deviceAPI.updateDevice(this.currentEditingId, deviceData);
+                alert('Dispositivo actualizado correctamente.');
             } else {
-                await this.api.createDevice(deviceData);
-                this.showSuccess('Dispositivo creado correctamente.');
+                // Cambiar de iotAPI a deviceAPI
+                await deviceAPI.createDevice(deviceData);
+                alert('Dispositivo creado correctamente.');
             }
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('deviceModal'));
@@ -153,7 +151,7 @@ class AdminManager {
             this.loadDevices();
         } catch (error) {
             console.error('Error guardando dispositivo:', error);
-            this.showError('Error al guardar el dispositivo.');
+            alert('Error al guardar el dispositivo.');
         }
     }
 
@@ -162,46 +160,6 @@ class AdminManager {
         document.getElementById('device-id').value = '';
         this.currentEditingId = null;
         document.getElementById('modalTitle').textContent = 'Agregar Dispositivo';
-    }
-
-    showError(message) {
-        // Crear y mostrar un mensaje de error
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        const container = document.querySelector('.container');
-        container.insertBefore(alertDiv, container.firstChild);
-        
-        // Auto-eliminar después de 5 segundos
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.parentNode.removeChild(alertDiv);
-            }
-        }, 5000);
-    }
-
-    showSuccess(message) {
-        // Crear y mostrar un mensaje de éxito
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-success alert-dismissible fade show';
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        const container = document.querySelector('.container');
-        container.insertBefore(alertDiv, container.firstChild);
-        
-        // Auto-eliminar después de 5 segundos
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.parentNode.removeChild(alertDiv);
-            }
-        }, 5000);
     }
 }
 

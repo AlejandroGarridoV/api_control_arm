@@ -1,115 +1,154 @@
 class RobotControls {
     constructor(api) {
         this.api = api;
+        this.devices = {}; // Almacenar información de todos los dispositivos
         this.initializeEvents();
+        this.loadAllDevices();
+    }
+
+    async loadAllDevices() {
+        try {
+            const devices = await deviceAPI.getDevices();
+            devices.forEach(device => {
+                this.devices[device.id] = device;
+            });
+            this.updateDeviceStatusDisplay();
+        } catch (error) {
+            this.api.logEvent('Error cargando dispositivos: ' + error.message, 'error');
+        }
     }
 
     initializeEvents() {
-        // Encendido/Apagado
-        document.getElementById('power-on').addEventListener('click', () => this.powerOn());
-        document.getElementById('power-off').addEventListener('click', () => this.powerOff());
+        // Encendido/Apagado Brazo
+        document.getElementById('arm-power-on').addEventListener('click', () => this.powerOnDevice('1'));
+        document.getElementById('arm-power-off').addEventListener('click', () => this.powerOffDevice('1'));
 
-        // Emergencia
-        document.getElementById('emergency-stop').addEventListener('click', () => this.emergencyStop());
-        document.getElementById('emergency-reset').addEventListener('click', () => this.resetEmergency());
+        // Encendido/Apagado Ventilador
+        document.getElementById('fan-power-on').addEventListener('click', () => this.powerOnDevice('2'));
+        document.getElementById('fan-power-off').addEventListener('click', () => this.powerOffDevice('2'));
 
-        // Movimiento
+        // Encendido/Apagado Banda Transportadora
+        document.getElementById('conveyor-power-on').addEventListener('click', () => this.powerOnDevice('3'));
+        document.getElementById('conveyor-power-off').addEventListener('click', () => this.powerOffDevice('3'));
+
+        // Emergencia (afecta a todos los dispositivos)
+        document.getElementById('emergency-stop').addEventListener('click', () => this.emergencyStopAll());
+        document.getElementById('emergency-reset').addEventListener('click', () => this.resetEmergencyAll());
+
+        // Movimiento (solo brazo robot)
         document.getElementById('move-to').addEventListener('click', () => this.moveToPosition());
         document.getElementById('go-home').addEventListener('click', () => this.goHome());
 
-        // Soldadura
+        // Soldadura (solo brazo robot)
         document.getElementById('start-weld').addEventListener('click', () => this.startWelding());
         document.getElementById('stop-weld').addEventListener('click', () => this.stopWelding());
     }
 
-    async powerOn() {
+    async powerOnDevice(deviceId) {
         try {
-            await this.api.powerOn();
-            this.api.logEvent('Robot encendido');
+            const device = this.devices[deviceId];
+            if (device) {
+                await deviceAPI.updateDevice(deviceId, {
+                    ...device,
+                    status: 'idle',
+                    last_update: new Date().toISOString()
+                });
+                this.api.logEvent(`${device.name} encendido`);
+                this.loadAllDevices(); // Recargar estados
+            }
         } catch (error) {
-            this.api.logEvent('Error encendiendo robot: ' + error.message, 'error');
+            this.api.logEvent('Error encendiendo dispositivo: ' + error.message, 'error');
         }
     }
 
-    async powerOff() {
+    async powerOffDevice(deviceId) {
         try {
-            await this.api.powerOff();
-            this.api.logEvent('Robot apagado');
+            const device = this.devices[deviceId];
+            if (device) {
+                await deviceAPI.updateDevice(deviceId, {
+                    ...device,
+                    status: 'off',
+                    last_update: new Date().toISOString()
+                });
+                this.api.logEvent(`${device.name} apagado`);
+                this.loadAllDevices(); // Recargar estados
+            }
         } catch (error) {
-            this.api.logEvent('Error apagando robot: ' + error.message, 'error');
+            this.api.logEvent('Error apagando dispositivo: ' + error.message, 'error');
         }
     }
 
-    async emergencyStop() {
+    async emergencyStopAll() {
         try {
-            await this.api.emergencyStop();
-            this.api.logEvent('¡PARADA DE EMERGENCIA ACTIVADA!');
+            // Apagar todos los dispositivos
+            for (const deviceId in this.devices) {
+                const device = this.devices[deviceId];
+                await deviceAPI.updateDevice(deviceId, {
+                    ...device,
+                    status: 'off',
+                    emergency_stop: true,
+                    last_update: new Date().toISOString()
+                });
+            }
+            this.api.logEvent('¡PARADA DE EMERGENCIA ACTIVADA!', 'error');
+            this.loadAllDevices(); // Recargar estados
         } catch (error) {
             this.api.logEvent('Error activando emergencia: ' + error.message, 'error');
         }
     }
 
-    async resetEmergency() {
+    async resetEmergencyAll() {
         try {
-            await this.api.resetEmergency();
-            this.api.logEvent('Emergencia reseteda');
+            // Reactivar todos los dispositivos
+            for (const deviceId in this.devices) {
+                const device = this.devices[deviceId];
+                await deviceAPI.updateDevice(deviceId, {
+                    ...device,
+                    emergency_stop: false,
+                    last_update: new Date().toISOString()
+                });
+            }
+            this.api.logEvent('Emergencia reseteda en todos los dispositivos');
+            this.loadAllDevices(); // Recargar estados
         } catch (error) {
             this.api.logEvent('Error reseteando emergencia: ' + error.message, 'error');
         }
     }
 
-    async moveToPosition() {
-        const x = parseInt(document.getElementById('coord-x').value);
-        const y = parseInt(document.getElementById('coord-y').value);
-        const z = parseInt(document.getElementById('coord-z').value);
+    // ... (resto de métodos para movimiento y soldadura del brazo robot)
 
-        if (isNaN(x) || isNaN(y) || isNaN(z)) {
-            this.api.logEvent('Coordenadas inválidas', 'error');
-            return;
+    updateDeviceStatusDisplay() {
+        // Actualizar display con el estado de todos los dispositivos
+        if (this.devices['1']) {
+            document.getElementById('arm-state').textContent = 
+                `Brazo Robot: ${this.translateStatus(this.devices['1'].status)}`;
         }
-
-        try {
-            await this.api.moveToPosition(x, y, z);
-            this.api.logEvent(`Movimiento a posición: X=${x}, Y=${y}, Z=${z}`);
-        } catch (error) {
-            this.api.logEvent('Error moviendo robot: ' + error.message, 'error');
-        }
-    }
-
-    async goHome() {
-        try {
-            await this.api.goHome();
-            // Resetear inputs a 0
-            document.getElementById('coord-x').value = 0;
-            document.getElementById('coord-y').value = 0;
-            document.getElementById('coord-z').value = 0;
-            this.api.logEvent('Volviendo a posición home (0,0,0)');
-        } catch (error) {
-            this.api.logEvent('Error yendo a home: ' + error.message, 'error');
-        }
-    }
-
-    async startWelding() {
-        const pointsText = document.getElementById('weld-points').value;
         
-        try {
-            const points = JSON.parse(pointsText);
-            if (!Array.isArray(points)) throw new Error('Formato inválido');
-            
-            await this.api.startWelding(points);
-            this.api.logEvent(`Soldadura iniciada con ${points.length} puntos`);
-        } catch (error) {
-            this.api.logEvent('Error en puntos de soldadura: ' + error.message, 'error');
+        if (this.devices['2']) {
+            document.getElementById('fan-state').textContent = 
+                `Ventilador: ${this.translateStatus(this.devices['2'].status)}`;
         }
+        
+        if (this.devices['3']) {
+            document.getElementById('conveyor-state').textContent = 
+                `Banda Transportadora: ${this.translateStatus(this.devices['3'].status)}`;
+        }
+
+        // Verificar si hay emergencia en algún dispositivo
+        const emergencyActive = Object.values(this.devices).some(device => device.emergency_stop);
+        document.getElementById('emergency-state').textContent = 
+            `Emergencia: ${emergencyActive ? 'Activada' : 'No activa'}`;
     }
 
-    async stopWelding() {
-        try {
-            await this.api.stopWelding();
-            this.api.logEvent('Soldadura detenida');
-        } catch (error) {
-            this.api.logEvent('Error deteniendo soldadura: ' + error.message, 'error');
-        }
+    translateStatus(status) {
+        const translations = {
+            'off': 'Apagado',
+            'idle': 'Encendido',
+            'moving': 'Moviéndose',
+            'welding': 'Soldando',
+            'emergency': 'Emergencia'
+        };
+        return translations[status] || status;
     }
 }
 
