@@ -250,6 +250,11 @@ class RobotControls {
             throw new Error('No se encontró el brazo robot');
         }
         
+        // Indicar que el sistema está moviendo el brazo (no el usuario escribiendo)
+        if (window.robotUI) {
+            window.robotUI.isUserTyping = false;
+        }
+        
         await this.api.updateDevice(robotArm.id, {
             ...robotArm,
             status: 'moving',
