@@ -44,6 +44,35 @@ class DeviceAPI {
         }
     }
 
+    async getDeviceHistory() {
+    try {
+        const response = await fetch(this.baseURL);
+        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+        const devices = await response.json();
+        
+        // Convertir a array si es necesario
+        const devicesArray = Array.isArray(devices) ? devices : [devices];
+        
+        // Ordenar por última actualización (más reciente primero)
+        const sortedDevices = devicesArray.sort((a, b) => {
+            return new Date(b.last_update) - new Date(a.last_update);
+        });
+        
+        // Tomar los últimos 10 registros
+        const last10Records = sortedDevices.slice(0, 10);
+        
+        return last10Records;
+    } catch (error) {
+        console.error('Error en getDeviceHistory:', error);
+        // Datos de ejemplo para demostración
+        return [
+            {id: "1", name: "Brazo Soldador Principal", type: "robot_arm", status: "off", position_x: 0, position_y: 0, position_z: 0, emergency_stop: false, welding_active: false, last_update: new Date().toISOString()},
+            {id: "2", name: "Ventilador de Extracción", type: "fan", status: "idle", last_update: new Date().toISOString()},
+            {id: "3", name: "Banda Transportadora", type: "conveyor", status: "off", last_update: new Date().toISOString()}
+        ];
+    }
+}
+
     async getDevices() {
         try {
             const response = await fetch(this.baseURL);

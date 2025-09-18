@@ -541,28 +541,7 @@
 
             <!-- Panel de Visualización -->
             <div class="visualization-panel">
-                <!-- Indicadores visuales -->
-                <h2><i class="bi bi-lightning-charge"></i> Estado del Sistema</h2>
-                <div class="visual-indicators">
-                    <div class="visual-indicator" id="arm-visual">
-                        <div class="indicator-icon"><i class="bi bi-robot"></i></div>
-                        <div class="indicator-value">Brazo: Apagado</div>
-                    </div>
-                    <div class="visual-indicator" id="fan-visual">
-                        <div class="indicator-icon"><i class="bi bi-fan"></i></div>
-                        <div class="indicator-value">Ventilador: Apagado</div>
-                    </div>
-                    <div class="visual-indicator" id="conveyor-visual">
-                        <div class="indicator-icon"><i class="bi bi-cone-striped"></i></div>
-                        <div class="indicator-value">Banda: Apagada</div>
-                    </div>
-                    <div class="visual-indicator" id="welding-visual">
-                        <div class="indicator-icon"><i class="bi bi-fire"></i></div>
-                        <div class="indicator-value">Soldadura: Inactiva</div>
-                    </div>
-                </div>
-
-                <h2><i class="bi bi-geo-alt"></i> Posición Actual Brazo</h2>
+                                <h2><i class="bi bi-geo-alt"></i> Posición Actual Brazo</h2>
                 <div class="position-display">
                     <div>X: <span id="current-x">0</span></div>
                     <div>Y: <span id="current-y">0</span></div>
@@ -613,8 +592,34 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/controls.js"></script>
-    <script src="js/ui.js"></script>
+<script src="js/api.js"></script>
+<script src="js/controls.js"></script>
+<script src="js/ui.js"></script>
+<script>
+// Inicialización cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Inicializar la API
+        await robotAPI.initialize();
+        
+        // Crear instancia de controles
+        const controls = new RobotControls(robotAPI);
+        
+        // Crear instancia de UI pasando también los controles
+        const ui = new RobotUI(robotAPI, controls);
+        
+        // Hacer disponibles globalmente para debugging
+        window.robotControls = controls;
+        window.robotUI = ui;
+        
+        // Actualizar estado inicial
+        controls.loadAllDevices();
+        
+    } catch (error) {
+        console.error('Error inicializando la aplicación:', error);
+        alert('Error al inicializar la aplicación: ' + error.message);
+    }
+});
+</script>
 </body>
 </html>

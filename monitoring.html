@@ -264,7 +264,46 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/monitoring.js"></script>
+    <script>
+        // Inicialización cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const deviceAPI = new DeviceAPI();
+                const monitoringManager = new MonitoringManager(deviceAPI);
+                window.monitoringManager = monitoringManager;
+                
+                // Opcional: agregar control para detener/iniciar la actualización automática
+                const updateIndicator = document.getElementById('last-update');
+                if (updateIndicator) {
+                    updateIndicator.style.cursor = 'pointer';
+                    updateIndicator.title = 'Click para pausar/reanudar actualización automática';
+                    
+                    let autoRefreshPaused = false;
+                    updateIndicator.addEventListener('click', () => {
+                        autoRefreshPaused = !autoRefreshPaused;
+                        if (autoRefreshPaused) {
+                            monitoringManager.stopAutoRefresh();
+                            updateIndicator.innerHTML = '<i class="bi bi-pause-circle"></i> Actualización pausada';
+                        } else {
+                            monitoringManager.startAutoRefresh();
+                            updateIndicator.innerHTML = 'Actualizando...';
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error inicializando monitoreo:', error);
+                // Mostrar mensaje de error
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.textContent = 'Error al inicializar el sistema de monitoreo. Por favor, recarga la página.';
+                
+                document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+            }
+        });
+    </script>
+</body>
 </body>
 </html>

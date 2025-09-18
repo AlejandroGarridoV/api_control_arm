@@ -17,6 +17,12 @@ class AdminManager {
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => this.loadDevices());
         }
+        
+        // Agregar evento al botón de agregar dispositivo
+        const addDeviceBtn = document.getElementById('add-device-btn');
+        if (addDeviceBtn) {
+            addDeviceBtn.addEventListener('click', () => this.resetForm());
+        }
     }
 
     async loadDevices() {
@@ -24,13 +30,7 @@ class AdminManager {
             // Mostrar mensaje de carga
             this.showLoading(true);
             
-            // Usar la API disponible (deviceAPI o robotAPI)
-            const api = window.deviceAPI || window.robotAPI;
-            if (!api) {
-                throw new Error('No se encontró la API');
-            }
-            
-            const devices = await api.getDevices();
+            const devices = await this.api.getDevices();
             this.renderDevicesTable(devices);
             
             // Ocultar mensaje de carga
@@ -62,7 +62,10 @@ class AdminManager {
         
         const statusMap = {
             'off': { text: 'Apagado', class: 'badge bg-secondary' },
-            'idle': { text: 'En espera', class: 'badge bg-info' }
+            'idle': { text: 'En espera', class: 'badge bg-info' },
+            'moving': { text: 'Moviéndose', class: 'badge bg-warning' },
+            'welding': { text: 'Soldando', class: 'badge bg-orange' },
+            'emergency': { text: 'Emergencia', class: 'badge bg-danger' }
         };
         
         const typeMap = {
@@ -110,13 +113,7 @@ class AdminManager {
 
     async editDevice(id) {
         try {
-            // Usar la API disponible (deviceAPI o robotAPI)
-            const api = window.deviceAPI || window.robotAPI;
-            if (!api) {
-                throw new Error('No se encontró la API');
-            }
-            
-            const device = await api.getDevice(id);
+            const device = await this.api.getDevice(id);
             this.currentEditingId = id;
             
             document.getElementById('device-id').value = device.id;
@@ -140,13 +137,7 @@ class AdminManager {
         }
         
         try {
-            // Usar la API disponible (deviceAPI o robotAPI)
-            const api = window.deviceAPI || window.robotAPI;
-            if (!api) {
-                throw new Error('No se encontró la API');
-            }
-            
-            await api.deleteDevice(id);
+            await this.api.deleteDevice(id);
             this.showSuccess('Dispositivo eliminado correctamente.');
             this.loadDevices();
         } catch (error) {
@@ -170,17 +161,20 @@ class AdminManager {
         };
         
         try {
-            // Usar la API disponible (deviceAPI o robotAPI)
-            const api = window.deviceAPI || window.robotAPI;
-            if (!api) {
-                throw new Error('No se encontró la API');
-            }
-            
             if (this.currentEditingId) {
-                await api.updateDevice(this.currentEditingId, deviceData);
+                await this.api.updateDevice(this.currentEditingId, deviceData);
                 this.showSuccess('Dispositivo actualizado correctamente.');
             } else {
-                await api.createDevice(deviceData);
+                // Para dispositivos nuevos, agregar campos básicos según el tipo
+                if (deviceData.type === 'robot_arm') {
+                    deviceData.position_x = 0;
+                    deviceData.position_y = 0;
+                    deviceData.position_z = 0;
+                    deviceData.welding_active = false;
+                    deviceData.emergency_stop = false;
+                }
+                
+                await this.api.createDevice(deviceData);
                 this.showSuccess('Dispositivo creado correctamente.');
             }
             
@@ -256,25 +250,3 @@ class AdminManager {
         }
     }
 }
-
-// Inicialización cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    // Verificar si alguna API está disponible
-    const api = window.deviceAPI || window.robotAPI;
-    
-    if (api) {
-        const adminManager = new AdminManager(api);
-        window.adminManager = adminManager;
-    } else {
-        console.error('No se encontró ninguna API disponible');
-        // Mostrar mensaje de error
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'alert alert-danger';
-        errorDiv.textContent = 'Error: No se pudo conectar con el sistema. Por favor, recarga la página.';
-        
-        const container = document.querySelector('.container');
-        if (container) {
-            container.insertBefore(errorDiv, container.firstChild);
-        }
-    }
-});

@@ -1,65 +1,3 @@
-// API base URL - Usando la API real proporcionada
-const API_BASE_URL = 'https://68c4d0e2a712aaca2b673807.mockapi.io/api/v1/Welding_arm';
-
-class DeviceAPI {
-    constructor() {
-        this.baseURL = API_BASE_URL;
-        this.history = []; // Almacenar el historial real
-    }
-
-    async getDevices() {
-        try {
-            const response = await fetch(this.baseURL);
-            if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-            const devices = await response.json();
-            
-            // Si la API devuelve un solo objeto, lo convertimos en array
-            return Array.isArray(devices) ? devices : [devices];
-        } catch (error) {
-            console.error('Error en getDevices:', error);
-            throw error;
-        }
-    }
-
-    async getDeviceHistory() {
-        try {
-            const response = await fetch(this.baseURL);
-            if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-            const devices = await response.json();
-            
-            // Convertir a array si es necesario
-            const devicesArray = Array.isArray(devices) ? devices : [devices];
-            
-            // Ordenar por última actualización (más reciente primero)
-            const sortedDevices = devicesArray.sort((a, b) => {
-                return new Date(b.last_update) - new Date(a.last_update);
-            });
-            
-            // Tomar los últimos 10 registros
-            const last10Records = sortedDevices.slice(0, 10);
-            
-            // Guardar en el historial
-            this.history = last10Records;
-            
-            return last10Records;
-        } catch (error) {
-            console.error('Error en getDeviceHistory:', error);
-            throw error;
-        }
-    }
-
-    async getDevice(id) {
-        try {
-            const response = await fetch(`${this.baseURL}/${id}`);
-            if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-            return await response.json();
-        } catch (error) {
-            console.error('Error en getDevice:', error);
-            throw error;
-        }
-    }
-}
-
 // Clase MonitoringManager
 class MonitoringManager {
     constructor(api) {
@@ -80,8 +18,10 @@ class MonitoringManager {
             this.renderStatusCards(devices);
             
             // Actualizar la marca de tiempo de la última actualización
-            document.getElementById('last-update').textContent = 
-                `Última actualización: ${new Date().toLocaleTimeString()}`;
+            const updateElement = document.getElementById('last-update');
+            if (updateElement) {
+                updateElement.textContent = `Última actualización: ${new Date().toLocaleTimeString()}`;
+            }
         } catch (error) {
             console.error('Error cargando estado de dispositivos:', error);
             this.showError('Error al cargar los dispositivos. Verifica la conexión.');
@@ -99,6 +39,8 @@ class MonitoringManager {
 
     renderStatusCards(devices) {
         const container = document.getElementById('devices-status-cards');
+        if (!container) return;
+        
         container.innerHTML = '';
         
         const statusMap = {
@@ -137,7 +79,7 @@ class MonitoringManager {
                         <h3>${icon}</h3>
                         <h5 class="card-title">${device.name}</h5>
                         <p class="card-text">${typeName}</p>
-                        <div class="status-badge">${statusInfo.text}</span></div>
+                        <div class="status-badge">${statusInfo.text}</div>
                         <p class="mt-2 small">Actualizado: ${new Date(device.last_update).toLocaleTimeString()}</p>
                     </div>
                 </div>
@@ -149,6 +91,7 @@ class MonitoringManager {
 
     renderDeviceHistory(history) {
         const container = document.getElementById('status-tables');
+        if (!container) return;
         
         // Limpiar el indicador de carga
         container.innerHTML = '';
@@ -257,37 +200,15 @@ class MonitoringManager {
         `;
         
         const container = document.querySelector('.container');
-        container.insertBefore(alertDiv, container.firstChild);
-        
-        // Auto-eliminar después de 5 segundos
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.parentNode.removeChild(alertDiv);
-            }
-        }, 5000);
+        if (container) {
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // Auto-eliminar después de 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
     }
 }
-
-// Inicialización cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    const deviceAPI = new DeviceAPI();
-    const monitoringManager = new MonitoringManager(deviceAPI);
-    window.monitoringManager = monitoringManager;
-    
-    // Opcional: agregar control para detener/iniciar la actualización automática
-    const updateIndicator = document.getElementById('last-update');
-    updateIndicator.style.cursor = 'pointer';
-    updateIndicator.title = 'Click para pausar/reanudar actualización automática';
-    
-    let autoRefreshPaused = false;
-    updateIndicator.addEventListener('click', () => {
-        autoRefreshPaused = !autoRefreshPaused;
-        if (autoRefreshPaused) {
-            monitoringManager.stopAutoRefresh();
-            updateIndicator.innerHTML = '<i class="bi bi-pause-circle"></i> Actualización pausada';
-        } else {
-            monitoringManager.startAutoRefresh();
-            updateIndicator.innerHTML = 'Actualizando...';
-        }
-    });
-});
