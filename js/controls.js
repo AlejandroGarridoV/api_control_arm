@@ -233,6 +233,84 @@ class RobotControls {
         }
     }
 
+    async moveToPosition() {
+    const x = parseInt(document.getElementById('coord-x').value);
+    const y = parseInt(document.getElementById('coord-y').value);
+    const z = parseInt(document.getElementById('coord-z').value);
+
+    if (isNaN(x) || isNaN(y) || isNaN(z)) {
+        this.api.logEvent('Coordenadas inválidas', 'error');
+        alert('Por favor, ingrese coordenadas válidas para X, Y y Z.');
+        return;
+    }
+
+    try {
+        const robotArm = Object.values(this.devices).find(d => d.type === 'robot_arm');
+        if (!robotArm) {
+            throw new Error('No se encontró el brazo robot');
+        }
+        
+        await this.api.updateDevice(robotArm.id, {
+            ...robotArm,
+            status: 'moving',
+            position_x: x,
+            position_y: y,
+            position_z: z,
+            welding_active: false,
+            last_update: new Date().toISOString()
+        });
+        
+        this.api.logEvent(`Movimiento a posición: X=${x}, Y=${y}, Z=${z}`);
+        
+        // Actualizar la posición actual en la interfaz inmediatamente
+        document.getElementById('current-x').textContent = x;
+        document.getElementById('current-y').textContent = y;
+        document.getElementById('current-z').textContent = z;
+        
+        // Recargar estados después de un breve delay
+        setTimeout(() => this.loadAllDevices(), 500);
+    } catch (error) {
+        this.api.logEvent('Error moviendo robot: ' + error.message, 'error');
+        alert('Error al mover el brazo robot: ' + error.message);
+    }
+}
+
+async goHome() {
+    try {
+        const robotArm = Object.values(this.devices).find(d => d.type === 'robot_arm');
+        if (!robotArm) {
+            throw new Error('No se encontró el brazo robot');
+        }
+        
+        await this.api.updateDevice(robotArm.id, {
+            ...robotArm,
+            status: 'moving',
+            position_x: 0,
+            position_y: 0,
+            position_z: 0,
+            welding_active: false,
+            last_update: new Date().toISOString()
+        });
+        
+        // Resetear inputs a 0
+        document.getElementById('coord-x').value = 0;
+        document.getElementById('coord-y').value = 0;
+        document.getElementById('coord-z').value = 0;
+        
+        // Actualizar la posición actual en la interfaz inmediatamente
+        document.getElementById('current-x').textContent = 0;
+        document.getElementById('current-y').textContent = 0;
+        document.getElementById('current-z').textContent = 0;
+        
+        this.api.logEvent('Volviendo a posición home (0,0,0)');
+        // Recargar estados después de un breve delay
+        setTimeout(() => this.loadAllDevices(), 500);
+    } catch (error) {
+        this.api.logEvent('Error yendo a home: ' + error.message, 'error');
+        alert('Error al mover a posición inicial: ' + error.message);
+    }
+}
+
     async stopWelding() {
         try {
             const robotArm = Object.values(this.devices).find(d => d.type === 'robot_arm');

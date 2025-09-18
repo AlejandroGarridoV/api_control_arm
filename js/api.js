@@ -114,34 +114,43 @@ class DeviceAPI {
     }
 
     async getRobotStatus() {
-        try {
-            if (!this.robotId) {
-                await this.initialize();
-            }
-            
-            const response = await fetch(`${this.baseURL}/${this.robotId}`);
-            if (!response.ok) throw new Error('Error al obtener estado del robot');
-            
-            const robotData = await response.json();
-            return robotData;
-        } catch (error) {
-            console.error('Error obteniendo estado del robot:', error);
-            // Datos de ejemplo para demostración
-            return {
-                id: this.robotId || "1",
-                name: "Brazo Robot Principal",
-                type: "robot_arm",
-                status: "off",
-                position_x: 0,
-                position_y: 0,
-                position_z: 0,
-                emergency_stop: false,
-                welding_active: false,
-                last_update: new Date().toISOString()
-            };
+    try {
+        if (!this.robotId) {
+            await this.initialize();
         }
+        
+        const response = await fetch(`${this.baseURL}/${this.robotId}`);
+        if (!response.ok) throw new Error('Error al obtener estado del robot');
+        
+        const robotData = await response.json();
+        
+        // Asegurarse de que siempre tenga campos de posición
+        return {
+            position_x: 0,
+            position_y: 0,
+            position_z: 0,
+            ...robotData, // Esto sobrescribirá los ceros si el API devuelve valores
+            position_x: robotData.position_x || 0,
+            position_y: robotData.position_y || 0,
+            position_z: robotData.position_z || 0
+        };
+    } catch (error) {
+        console.error('Error obteniendo estado del robot:', error);
+        // Datos de ejemplo para demostración
+        return {
+            id: this.robotId || "1",
+            name: "Brazo Robot Principal",
+            type: "robot_arm",
+            status: "off",
+            position_x: 0,
+            position_y: 0,
+            position_z: 0,
+            emergency_stop: false,
+            welding_active: false,
+            last_update: new Date().toISOString()
+        };
     }
-
+}
     async updateRobot(updates) {
         try {
             if (!this.robotId) {
